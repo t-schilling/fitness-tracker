@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Fitness Tracker{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="mb-8">
+  <h1 class="font-display font-700 text-3xl tracking-wide" style="color: oklch(0.93 0.01 55);">
+    Dashboard
+  </h1>
+  <p class="text-sm mt-1" style="color: oklch(0.60 0.01 55);">
+    Resumen de tu entrenamiento actual
+  </p>
+</div>
+
+<!-- Training Load Cards (CTL / ATL / TSB) -->
+<section class="mb-8">
+  <h2 class="font-display font-600 text-lg tracking-wide mb-4" style="color: oklch(0.60 0.01 55);">
+    TRAINING LOAD
+  </h2>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+    <!-- CTL -->
+    <div class="rounded-lg p-5" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+      <div class="text-xs font-600 tracking-widest mb-3" style="color: oklch(0.65 0.15 240);">CTL — FITNESS</div>
+      {% if stats.ctl is not none %}
+        <div class="font-display font-700 text-4xl" style="color: oklch(0.93 0.01 55);">{{ stats.ctl | round(1) }}</div>
+      {% else %}
+        <div class="font-display font-700 text-4xl" style="color: oklch(0.28 0.008 55);">—</div>
+        <div class="text-xs mt-2" style="color: oklch(0.60 0.01 55);">Sincroniza para ver datos</div>
+      {% endif %}
+    </div>
+
+    <!-- ATL -->
+    <div class="rounded-lg p-5" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+      <div class="text-xs font-600 tracking-widest mb-3" style="color: oklch(0.65 0.15 35);">ATL — FATIGA</div>
+      {% if stats.atl is not none %}
+        <div class="font-display font-700 text-4xl" style="color: oklch(0.93 0.01 55);">{{ stats.atl | round(1) }}</div>
+      {% else %}
+        <div class="font-display font-700 text-4xl" style="color: oklch(0.28 0.008 55);">—</div>
+        <div class="text-xs mt-2" style="color: oklch(0.60 0.01 55);">Sincroniza para ver datos</div>
+      {% endif %}
+    </div>
+
+    <!-- TSB -->
+    <div class="rounded-lg p-5" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+      <div class="text-xs font-600 tracking-widest mb-3" style="color: oklch(0.60 0.01 55);">TSB — FORMA</div>
+      {% if stats.tsb is not none %}
+        {% set tsb_color = 'oklch(0.65 0.15 145)' if stats.tsb >= 0 else 'oklch(0.55 0.18 25)' %}
+        <div class="font-display font-700 text-4xl" style="color: {{ tsb_color }};">
+          {% if stats.tsb > 0 %}+{% endif %}{{ stats.tsb | round(1) }}
+        </div>
+        <div class="text-xs mt-2" style="color: oklch(0.60 0.01 55);">
+          {% if stats.tsb >= 5 %}Fresco — listo para rendir
+          {% elif stats.tsb >= -5 %}Neutro
+          {% else %}Cansado — prioriza recuperación
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="font-display font-700 text-4xl" style="color: oklch(0.28 0.008 55);">—</div>
+        <div class="text-xs mt-2" style="color: oklch(0.60 0.01 55);">Sincroniza para ver datos</div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+<!-- Weekly Summary -->
+<section class="mb-8">
+  <h2 class="font-display font-600 text-lg tracking-wide mb-4" style="color: oklch(0.60 0.01 55);">
+    ESTA SEMANA
+  </h2>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+    {% set weekly_stats = [
+      ("KM", stats.week_km, "km totales"),
+      ("D+", stats.week_elevation, "m elevación"),
+      ("Sesiones", stats.week_sessions if stats.week_sessions is defined else None, "entrenamientos"),
+      ("Tiempo", stats.week_time if stats.week_time is defined else None, "horas en movimiento"),
+    ] %}
+
+    {% for label, value, sublabel in weekly_stats %}
+    <div class="rounded-lg p-4" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+      <div class="text-xs font-600 tracking-widest mb-2" style="color: oklch(0.60 0.01 55);">{{ label }}</div>
+      {% if value is not none %}
+        <div class="font-display font-700 text-2xl" style="color: oklch(0.93 0.01 55);">{{ value }}</div>
+      {% else %}
+        <div class="font-display font-700 text-2xl" style="color: oklch(0.28 0.008 55);">—</div>
+      {% endif %}
+      <div class="text-xs mt-1" style="color: oklch(0.60 0.01 55);">{{ sublabel }}</div>
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+
+<!-- Recent Activities -->
+<section>
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="font-display font-600 text-lg tracking-wide" style="color: oklch(0.60 0.01 55);">
+      ACTIVIDADES RECIENTES
+    </h2>
+    {% if stats.recent_activities %}
+      <a href="/activities" class="text-sm font-500 transition-colors"
+         style="color: oklch(0.72 0.17 55);"
+         onmouseover="this.style.color='oklch(0.50 0.12 55)'"
+         onmouseout="this.style.color='oklch(0.72 0.17 55)'">
+        Ver todas →
+      </a>
+    {% endif %}
+  </div>
+
+  {% if stats.recent_activities %}
+    <div class="rounded-lg overflow-hidden" style="border: 1px solid oklch(0.28 0.008 55);">
+      <table class="w-full text-sm">
+        <thead>
+          <tr style="background-color: oklch(0.17 0.008 55);">
+            <th class="text-left px-4 py-3 font-600 text-xs tracking-widest" style="color: oklch(0.60 0.01 55);">ACTIVIDAD</th>
+            <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden sm:table-cell" style="color: oklch(0.60 0.01 55);">DISTANCIA</th>
+            <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden md:table-cell" style="color: oklch(0.60 0.01 55);">RITMO</th>
+            <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden md:table-cell" style="color: oklch(0.60 0.01 55);">D+</th>
+            <th class="text-right px-4 py-3 font-600 text-xs tracking-widest" style="color: oklch(0.60 0.01 55);">FC</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for act in stats.recent_activities %}
+          <tr class="transition-colors"
+              style="border-top: 1px solid oklch(0.28 0.008 55);"
+              onmouseover="this.style.backgroundColor='oklch(0.21 0.008 55)'"
+              onmouseout="this.style.backgroundColor=''">
+            <td class="px-4 py-3">
+              <div class="font-500" style="color: oklch(0.93 0.01 55);">{{ act.name }}</div>
+              <div class="text-xs" style="color: oklch(0.60 0.01 55);">{{ act.sport_type }} · {{ act.start_date[:10] }}</div>
+            </td>
+            <td class="px-4 py-3 text-right font-display font-600 hidden sm:table-cell" style="color: oklch(0.93 0.01 55);">
+              {{ "%.1f"|format(act.distance_m / 1000) }} km
+            </td>
+            <td class="px-4 py-3 text-right hidden md:table-cell" style="color: oklch(0.60 0.01 55);">
+              {% if act.avg_pace_s_per_km %}
+                {{ "%d:%02d"|format(act.avg_pace_s_per_km // 60, act.avg_pace_s_per_km % 60) }} /km
+              {% else %}—{% endif %}
+            </td>
+            <td class="px-4 py-3 text-right hidden md:table-cell" style="color: oklch(0.60 0.01 55);">
+              {% if act.elevation_gain_m %}{{ act.elevation_gain_m | int }}m{% else %}—{% endif %}
+            </td>
+            <td class="px-4 py-3 text-right font-display font-600" style="color: oklch(0.65 0.15 35);">
+              {% if act.avg_heart_rate %}{{ act.avg_heart_rate | int }}{% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  {% else %}
+    <!-- Empty state -->
+    <div class="rounded-lg p-12 flex flex-col items-center text-center"
+         style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+      <svg class="w-10 h-10 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+           style="color: oklch(0.28 0.008 55);" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+      <p class="font-display font-600 text-lg mb-1" style="color: oklch(0.60 0.01 55);">
+        Sin actividades aún
+      </p>
+      <p class="text-sm max-w-xs" style="color: oklch(0.60 0.01 55);">
+        Haz clic en <strong style="color: oklch(0.72 0.17 55);">Sync</strong> en la barra lateral para importar tus entrenamientos de Huawei Health y Strava.
+      </p>
+    </div>
+  {% endif %}
+
+</section>
+
+{% endblock %}
