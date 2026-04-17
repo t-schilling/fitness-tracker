@@ -1,0 +1,35 @@
+app = "fitness-tracker"
+primary_region = "scl"  # Santiago, Chile
+
+[build]
+  [build.args]
+    PYTHON_VERSION = "3.12"
+
+[env]
+  DATABASE_PATH = "/data/fitness.db"
+
+[mounts]
+  source = "fitness_data"
+  destination = "/data"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

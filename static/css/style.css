@@ -1,0 +1,47 @@
+/* Custom styles complementing Tailwind */
+
+/* HTMX loading indicator — hide by default, show on request */
+.htmx-indicator {
+  display: none;
+}
+.htmx-request .htmx-indicator {
+  display: inline;
+}
+.htmx-request.htmx-indicator {
+  display: inline;
+}
+
+/* Hide the static sync icon when request is in flight */
+.htmx-indicator-hide {
+  display: inline;
+}
+.htmx-request .htmx-indicator-hide {
+  display: none;
+}
+
+/* Chart.js canvas sizing */
+canvas {
+  max-width: 100%;
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: oklch(0.17 0.008 55);
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.28 0.008 55);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.60 0.01 55);
+}
+
+/* Font weight utilities Tailwind doesn't generate for custom fonts */
+.font-400 { font-weight: 400; }
+.font-500 { font-weight: 500; }
+.font-600 { font-weight: 600; }
+.font-700 { font-weight: 700; }

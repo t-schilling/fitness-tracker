@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Fitness Tracker{% endblock %}</title>
+
+  <!-- Fonts: Barlow Semi Condensed (headings/data) + Manrope (UI/body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Barlow Semi Condensed"', 'sans-serif'],
+            sans: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            bg:        'oklch(0.12 0.008 55)',
+            surface:   'oklch(0.17 0.008 55)',
+            surface2:  'oklch(0.21 0.008 55)',
+            border:    'oklch(0.28 0.008 55)',
+            text:      'oklch(0.93 0.01 55)',
+            muted:     'oklch(0.60 0.01 55)',
+            accent:    'oklch(0.72 0.17 55)',
+            'accent-dim': 'oklch(0.50 0.12 55)',
+            ctl:       'oklch(0.65 0.15 240)',
+            atl:       'oklch(0.65 0.15 35)',
+            'tsb-pos': 'oklch(0.65 0.15 145)',
+            'tsb-neg': 'oklch(0.55 0.18 25)',
+          },
+        },
+      },
+    }
+  </script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body class="dark h-full font-sans" style="background-color: oklch(0.12 0.008 55); color: oklch(0.93 0.01 55);">
+
+  <div class="flex h-full min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="hidden md:flex flex-col w-56 shrink-0 border-r py-6 px-3 gap-1"
+           style="background-color: oklch(0.17 0.008 55); border-color: oklch(0.28 0.008 55);">
+
+      <!-- Logo -->
+      <div class="px-3 mb-6">
+        <span class="font-display font-700 text-xl tracking-wide" style="color: oklch(0.72 0.17 55);">
+          FT
+        </span>
+        <span class="font-display font-600 text-xl tracking-wide ml-1" style="color: oklch(0.93 0.01 55);">
+          Tracker
+        </span>
+      </div>
+
+      <!-- Nav links -->
+      <nav class="flex flex-col gap-0.5">
+        {% set nav_items = [
+          ("/",           "Dashboard",      "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"),
+          ("/activities", "Actividades",    "M13 10V3L4 14h7v7l9-11h-7z"),
+          ("/training",   "Training Load",  "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"),
+          ("/gpx",        "Rutas GPX",      "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"),
+          ("/race",       "Race Analysis",  "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"),
+        ] %}
+
+        {% for href, label, icon_path in nav_items %}
+          {% set is_active = request.url.path == href %}
+          <a href="{{ href }}"
+             class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-500 transition-colors"
+             style="
+               {% if is_active %}
+                 background-color: oklch(0.21 0.008 55);
+                 color: oklch(0.72 0.17 55);
+               {% else %}
+                 color: oklch(0.60 0.01 55);
+               {% endif %}
+             "
+             onmouseover="{% if not is_active %}this.style.backgroundColor='oklch(0.21 0.008 55)';this.style.color='oklch(0.93 0.01 55)'{% endif %}"
+             onmouseout="{% if not is_active %}this.style.backgroundColor='';this.style.color='oklch(0.60 0.01 55)'{% endif %}">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+              <path stroke-linecap="round" stroke-linejoin="round" d="{{ icon_path }}" />
+            </svg>
+            <span>{{ label }}</span>
+          </a>
+        {% endfor %}
+      </nav>
+
+      <!-- Sync button at bottom -->
+      <div class="mt-auto px-3">
+        <button
+          hx-post="/sync"
+          hx-indicator="#sync-spinner"
+          hx-swap="none"
+          class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-600 transition-colors"
+          style="background-color: oklch(0.72 0.17 55); color: oklch(0.12 0.008 55);"
+          onmouseover="this.style.backgroundColor='oklch(0.50 0.12 55)'"
+          onmouseout="this.style.backgroundColor='oklch(0.72 0.17 55)'">
+          <svg id="sync-spinner" class="w-4 h-4 htmx-indicator animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <svg class="w-4 h-4 htmx-indicator-hide" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Sync
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 overflow-auto">
+
+      <!-- Top bar (mobile) -->
+      <header class="md:hidden flex items-center justify-between px-4 py-3 border-b"
+              style="background-color: oklch(0.17 0.008 55); border-color: oklch(0.28 0.008 55);">
+        <span class="font-display font-700 text-lg" style="color: oklch(0.72 0.17 55);">FT</span>
+        <nav class="flex gap-4">
+          <a href="/" class="text-sm" style="color: oklch(0.60 0.01 55);">Dashboard</a>
+          <a href="/activities" class="text-sm" style="color: oklch(0.60 0.01 55);">Actividades</a>
+          <a href="/gpx" class="text-sm" style="color: oklch(0.60 0.01 55);">GPX</a>
+        </nav>
+      </header>
+
+      <div class="px-6 py-8 md:px-10 max-w-6xl mx-auto">
+        {% block content %}{% endblock %}
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container" class="fixed bottom-4 right-4 flex flex-col gap-2 z-50"></div>
+
+  <script>
+    // HTMX after-request toast
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+      if (evt.detail.pathInfo.requestPath === '/sync') {
+        const ok = evt.detail.xhr.status < 400;
+        showToast(ok ? 'Sync completado' : 'Error en sync', ok ? 'success' : 'error');
+      }
+    });
+
+    function showToast(msg, type) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const bg = type === 'success' ? 'oklch(0.65 0.15 145)' : 'oklch(0.55 0.18 25)';
+      toast.className = 'px-4 py-2 rounded-md text-sm font-500 transition-opacity';
+      toast.style.cssText = `background-color: ${bg}; color: oklch(0.12 0.008 55);`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
