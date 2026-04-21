@@ -150,7 +150,13 @@
     document.body.addEventListener('htmx:afterRequest', function(evt) {
       if (evt.detail.pathInfo.requestPath === '/sync') {
         const ok = evt.detail.xhr.status < 400;
-        showToast(ok ? 'Sync completado' : 'Error en sync', ok ? 'success' : 'error');
+        if (ok) {
+          const data = JSON.parse(evt.detail.xhr.responseText || '{}');
+          const msg = data.synced > 0 ? `${data.synced} actividades nuevas` : 'Todo al día';
+          showToast(msg, 'success');
+        } else {
+          showToast('Error en sync', 'error');
+        }
       }
     });
 
