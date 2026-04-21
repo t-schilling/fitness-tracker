@@ -77,5 +77,12 @@ async def init_db() -> None:
                 duration_min REAL,
                 synced_at    TEXT
             );
+
+            CREATE TABLE IF NOT EXISTS oauth_tokens (
+                source        TEXT PRIMARY KEY,
+                access_token  TEXT NOT NULL,
+                refresh_token TEXT NOT NULL,
+                expires_at    INTEGER NOT NULL
+            );
         """)
         await db.commit()
