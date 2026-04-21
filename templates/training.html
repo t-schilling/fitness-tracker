@@ -103,26 +103,24 @@
 
 {% block scripts %}
 <script>
-  // OKLCH colors resolved for Chart.js (approximate sRGB)
+  // Hex equivalents — Canvas 2D doesn't support oklch()
   const C = {
-    ctl:     'oklch(0.65 0.15 240)',
-    atl:     'oklch(0.65 0.15 35)',
-    tsbPos:  'oklch(0.65 0.15 145)',
-    tsbNeg:  'oklch(0.55 0.18 25)',
-    accent:  'oklch(0.72 0.17 55)',
-    muted:   'oklch(0.60 0.01 55)',
-    border:  'oklch(0.28 0.008 55)',
-    text:    'oklch(0.93 0.01 55)',
+    ctl:     '#4b9dd6',  // oklch(0.65 0.15 240) — blue
+    atl:     '#d98840',  // oklch(0.65 0.15 35)  — orange
+    tsbPos:  '#3dcc7a',  // oklch(0.65 0.15 145) — green
+    tsbNeg:  '#c44030',  // oklch(0.55 0.18 25)  — red
+    accent:  '#d49530',  // oklch(0.72 0.17 55)  — amber
+    muted:   '#918d87',  // oklch(0.60 0.01 55)  — gray
+    grid:    '#373330',  // oklch(0.21 0.008 55)  — surface2
+    tooltip: '#2a2725',  // oklch(0.17 0.008 55)  — surface
+    text:    '#edeae6',  // oklch(0.93 0.01 55)  — text
   };
 
   Chart.defaults.color = C.muted;
   Chart.defaults.font.family = 'Manrope';
   Chart.defaults.font.size = 11;
 
-  const gridOpts = {
-    color: 'oklch(0.21 0.008 55)',
-    drawBorder: false,
-  };
+  const gridOpts = { color: C.grid, drawBorder: false };
   const tickOpts = { color: C.muted, maxTicksLimit: 8 };
 
   let ctlChart, tsbChart, loadChart;
@@ -161,7 +159,7 @@
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { labels: { color: C.muted, boxWidth: 12, font: { size: 11 } } },
-          tooltip: { backgroundColor: 'oklch(0.21 0.008 55)', titleColor: C.text, bodyColor: C.muted },
+          tooltip: { backgroundColor: C.tooltip, titleColor: C.text, bodyColor: C.muted },
         },
         scales: {
           x: { grid: gridOpts, ticks: { ...tickOpts, maxTicksLimit: 6 } },
@@ -191,7 +189,7 @@
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { backgroundColor: 'oklch(0.21 0.008 55)', titleColor: C.text, bodyColor: C.muted },
+          tooltip: { backgroundColor: C.tooltip, titleColor: C.text, bodyColor: C.muted },
         },
         scales: {
           x: { grid: gridOpts, ticks: { ...tickOpts, maxTicksLimit: 6 } },
@@ -227,7 +225,7 @@
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { backgroundColor: 'oklch(0.21 0.008 55)', titleColor: C.text, bodyColor: C.muted },
+          tooltip: { backgroundColor: C.tooltip, titleColor: C.text, bodyColor: C.muted },
         },
         scales: {
           x: { grid: gridOpts, ticks: { ...tickOpts, maxTicksLimit: 6 } },
