@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import aiosqlite
 
 from app.services.strava_client import StravaClient, map_strava_activity
+from app.services.training_load import recalculate
 
 DEFAULT_MAX_HR = 190
 DEFAULT_REST_HR = 50
@@ -59,4 +60,5 @@ async def sync_strava(db: aiosqlite.Connection) -> int:
             pass  # Already exists, skip
 
     await db.commit()
+    await recalculate(db)
     return inserted
