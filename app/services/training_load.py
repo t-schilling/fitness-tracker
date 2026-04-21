@@ -1,5 +1,5 @@
 import math
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import aiosqlite
 
@@ -16,7 +16,7 @@ async def recalculate(db: aiosqlite.Connection) -> None:
         return
 
     first_day = min(daily_trimp)
-    last_day = date.today()
+    last_day = datetime.now(timezone.utc).date()
 
     rows: list[tuple] = []
     ctl = atl = 0.0

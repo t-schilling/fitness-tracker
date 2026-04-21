@@ -60,5 +60,6 @@ async def sync_strava(db: aiosqlite.Connection) -> int:
             pass  # Already exists, skip
 
     await db.commit()
-    await recalculate(db)
+    if inserted > 0:
+        await recalculate(db)
     return inserted

@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.config import settings
 from app.database import init_db
-from app.routers import dashboard, sync
+from app.routers import dashboard, sync, training
 
 templates = Jinja2Templates(directory="templates")
 
@@ -24,6 +24,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(dashboard.router)
 app.include_router(sync.router)
+app.include_router(training.router)
 
 
 # Temporary route to capture Strava OAuth code — remove after setup
