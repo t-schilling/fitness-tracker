@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.config import settings
 from app.database import init_db
-from app.routers import dashboard, sync, training
+from app.routers import activities, dashboard, sync, training
 
 templates = Jinja2Templates(directory="templates")
 
@@ -23,6 +23,7 @@ app = FastAPI(title="Fitness Tracker", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(dashboard.router)
+app.include_router(activities.router)
 app.include_router(sync.router)
 app.include_router(training.router)
 
