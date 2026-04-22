@@ -157,9 +157,13 @@ def _hr_zones(avg_hr: float | None, max_hr: float | None, athlete_max: int = 190
 async def activity_detail(request: Request, activity_id: int):
     db = await get_db()
     try:
-        row = await (await db.execute(
-            "SELECT * FROM activities WHERE id = ?", (activity_id,)
-        )).fetchone()
+        row = await (await db.execute("""
+            SELECT id, source, external_id, name, sport_type, start_date,
+                   distance_m, moving_time_s, elapsed_time_s, elevation_gain_m,
+                   avg_heart_rate, max_heart_rate, avg_pace_s_per_km,
+                   trimp, tss, map_polyline
+            FROM activities WHERE id = ?
+        """, (activity_id,))).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Actividad no encontrada")
 

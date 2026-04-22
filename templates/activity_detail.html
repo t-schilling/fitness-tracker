@@ -175,7 +175,7 @@
     return coords;
   }
 
-  const coords = decodePolyline("{{ act.map_polyline }}");
+  const coords = decodePolyline({{ act.map_polyline | tojson }});
   const map = L.map('map', { zoomControl: true });
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {

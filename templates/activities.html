@@ -94,16 +94,17 @@
     </thead>
     <tbody>
       {% for act in activities %}
-      <tr class="transition-colors cursor-pointer"
+      <tr class="transition-colors"
           style="border-top: 1px solid oklch(0.28 0.008 55);"
-          onclick="window.location='/activities/{{ act.id }}'"
           onmouseover="this.style.backgroundColor='oklch(0.21 0.008 55)'"
           onmouseout="this.style.backgroundColor=''">
         <td class="px-4 py-3">
-          <div class="font-500" style="color: oklch(0.93 0.01 55);">{{ act.name or "Actividad" }}</div>
-          <div class="text-xs" style="color: oklch(0.60 0.01 55);">
-            {{ act.sport_label }} · {{ act.date_fmt }}
-          </div>
+          <a href="/activities/{{ act.id }}" class="block hover:no-underline">
+            <div class="font-500" style="color: oklch(0.93 0.01 55);">{{ act.name or "Actividad" }}</div>
+            <div class="text-xs" style="color: oklch(0.60 0.01 55);">
+              {{ act.sport_label }} · {{ act.date_fmt }}
+            </div>
+          </a>
         </td>
         <td class="px-4 py-3 text-right font-display font-600 hidden sm:table-cell" style="color: oklch(0.93 0.01 55);">
           {% if act.km %}{{ act.km }} km{% else %}—{% endif %}
