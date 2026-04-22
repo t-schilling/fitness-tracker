@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}{{ act.name or "Actividad" }} — Fitness Tracker{% endblock %}
+
+{% block content %}
+
+<!-- Navigation -->
+<div class="flex items-center justify-between mb-6">
+  <a href="/activities" class="text-sm font-500 flex items-center gap-1"
+     style="color: oklch(0.60 0.01 55);"
+     onmouseover="this.style.color='oklch(0.93 0.01 55)'"
+     onmouseout="this.style.color='oklch(0.60 0.01 55)'">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Actividades
+  </a>
+  <div class="flex gap-2">
+    {% if next_id %}
+    <a href="/activities/{{ next_id }}"
+       class="px-3 py-1.5 rounded text-xs font-600"
+       style="background-color: oklch(0.21 0.008 55); color: oklch(0.60 0.01 55);">
+      ← Anterior
+    </a>
+    {% endif %}
+    {% if prev_id %}
+    <a href="/activities/{{ prev_id }}"
+       class="px-3 py-1.5 rounded text-xs font-600"
+       style="background-color: oklch(0.21 0.008 55); color: oklch(0.60 0.01 55);">
+      Siguiente →
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Header -->
+<div class="mb-6">
+  <div class="text-xs font-600 tracking-widest mb-1" style="color: oklch(0.72 0.17 55);">
+    {{ act.sport_label | upper }} · {{ act.date_fmt }}
+  </div>
+  <h1 class="font-display font-700 text-3xl tracking-wide" style="color: oklch(0.93 0.01 55);">
+    {{ act.name or "Actividad" }}
+  </h1>
+</div>
+
+<!-- Stats grid -->
+<section class="mb-6">
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    {% set stats = [
+      ("DISTANCIA",  (("%.2f"|format(act.km)) + " km") if act.km else "—"),
+      ("TIEMPO",     act.time_fmt),
+      ("RITMO",      act.pace_fmt),
+      ("D+",         ((act.elevation_gain_m | int | string) + " m") if act.elevation_gain_m else "—"),
+    ] %}
+    {% for label, value in stats %}
+    <div class="rounded-lg p-4" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+      <div class="text-xs font-600 tracking-widest mb-2" style="color: oklch(0.60 0.01 55);">{{ label }}</div>
+      <div class="font-display font-700 text-2xl" style="color: oklch(0.93 0.01 55);">{{ value }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Map + HR side by side -->
+<section class="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+  <!-- Map -->
+  <div class="lg:col-span-2 rounded-lg overflow-hidden" style="border: 1px solid oklch(0.28 0.008 55);">
+    {% if act.map_polyline %}
+      <div id="map" style="height: 380px; background-color: oklch(0.17 0.008 55);"></div>
+    {% else %}
+      <div class="flex items-center justify-center" style="height: 380px; background-color: oklch(0.17 0.008 55);">
+        <p class="text-sm" style="color: oklch(0.60 0.01 55);">Sin datos de mapa para esta actividad</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- HR + extra stats -->
+  <div class="flex flex-col gap-3">
+
+    <!-- HR zones -->
+    {% if act.hr_zones %}
+    <div class="rounded-lg p-4 flex-1" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+      <div class="text-xs font-600 tracking-widest mb-3" style="color: oklch(0.60 0.01 55);">FRECUENCIA CARDÍACA</div>
+
+      <div class="flex items-end gap-3 mb-3">
+        <div>
+          <div class="font-display font-700 text-4xl" style="color: {{ act.hr_zones.color }};">
+            {{ act.avg_heart_rate | int }}
+          </div>
+          <div class="text-xs mt-0.5" style="color: oklch(0.60 0.01 55);">ppm promedio</div>
+        </div>
+        {% if act.max_heart_rate %}
+        <div class="mb-1">
+          <div class="font-display font-600 text-xl" style="color: oklch(0.93 0.01 55);">{{ act.max_heart_rate | int }}</div>
+          <div class="text-xs" style="color: oklch(0.60 0.01 55);">máx</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Zone bar -->
+      <div class="mb-2">
+        <div class="flex justify-between text-xs mb-1" style="color: oklch(0.60 0.01 55);">
+          <span>Z{{ act.hr_zones.zone }} — {{ act.hr_zones.label }}</span>
+          <span>{{ act.hr_zones.pct_avg }}%</span>
+        </div>
+        <div class="rounded-full h-2 w-full" style="background-color: oklch(0.28 0.008 55);">
+          <div class="rounded-full h-2 transition-all"
+               style="width: {{ act.hr_zones.pct_avg }}%; background-color: {{ act.hr_zones.color }};"></div>
+        </div>
+      </div>
+
+      <!-- Zone legend -->
+      <div class="mt-3 space-y-1">
+        {% for z, label, color, lo, hi in [
+          (5, "VO2 Máx",      "#c44030", 90, 100),
+          (4, "Umbral",       "#d98840", 80, 90),
+          (3, "Aeróbico",     "#3dcc7a", 70, 80),
+          (2, "Base aeróbica","#4b9dd6", 60, 70),
+          (1, "Recuperación", "#918d87",  0, 60),
+        ] %}
+        <div class="flex items-center gap-2 text-xs"
+             style="opacity: {{ '1' if act.hr_zones.zone == z else '0.4' }};">
+          <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ color }};"></span>
+          <span style="color: oklch(0.93 0.01 55);">Z{{ z }}</span>
+          <span style="color: oklch(0.60 0.01 55);">{{ label }}</span>
+          <span class="ml-auto" style="color: oklch(0.60 0.01 55);">{{ lo }}–{{ hi }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Extra stats -->
+    <div class="rounded-lg p-4" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+      <div class="text-xs font-600 tracking-widest mb-3" style="color: oklch(0.60 0.01 55);">CARGA</div>
+      <div class="space-y-2">
+        {% if act.trimp %}
+        <div class="flex justify-between text-sm">
+          <span style="color: oklch(0.60 0.01 55);">TRIMP</span>
+          <span class="font-display font-600" style="color: oklch(0.93 0.01 55);">{{ act.trimp | round(1) }}</span>
+        </div>
+        {% endif %}
+        {% if act.moving_time_s and act.elapsed_time_s %}
+        <div class="flex justify-between text-sm">
+          <span style="color: oklch(0.60 0.01 55);">T. pausa</span>
+          <span class="font-display font-600" style="color: oklch(0.93 0.01 55);">
+            {{ act.pause_fmt }}
+          </span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+{% if act.map_polyline %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  function decodePolyline(encoded) {
+    let index = 0, lat = 0, lng = 0, coords = [];
+    while (index < encoded.length) {
+      let shift = 0, result = 0, b;
+      do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      lat += (result & 1) ? ~(result >> 1) : result >> 1;
+      shift = result = 0;
+      do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      lng += (result & 1) ? ~(result >> 1) : result >> 1;
+      coords.push([lat / 1e5, lng / 1e5]);
+    }
+    return coords;
+  }
+
+  const coords = decodePolyline("{{ act.map_polyline }}");
+  const map = L.map('map', { zoomControl: true });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CartoDB',
+    maxZoom: 18,
+  }).addTo(map);
+
+  const route = L.polyline(coords, { color: '#d49530', weight: 3, opacity: 0.9 }).addTo(map);
+
+  // Start / end markers
+  if (coords.length) {
+    L.circleMarker(coords[0], { radius: 6, color: '#3dcc7a', fillColor: '#3dcc7a', fillOpacity: 1, weight: 2 })
+      .bindTooltip('Inicio').addTo(map);
+    L.circleMarker(coords[coords.length - 1], { radius: 6, color: '#c44030', fillColor: '#c44030', fillOpacity: 1, weight: 2 })
+      .bindTooltip('Fin').addTo(map);
+  }
+
+  map.fitBounds(route.getBounds(), { padding: [20, 20] });
+</script>
+{% endif %}
+{% endblock %}

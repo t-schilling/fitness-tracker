@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Query
+from fastapi import APIRouter, HTTPException, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -81,7 +81,7 @@ async def activities_list(
         offset = (page - 1) * PAGE_SIZE
 
         rows = await (await db.execute(f"""
-            SELECT name, sport_type, start_date, distance_m, moving_time_s,
+            SELECT id, name, sport_type, start_date, distance_m, moving_time_s,
                    elevation_gain_m, avg_heart_rate, avg_pace_s_per_km, trimp
             FROM activities {where}
             ORDER BY start_date DESC
@@ -129,5 +129,74 @@ async def activities_list(
                 "time": f"{total_hours}h {total_min:02d}m",
                 "sessions": agg["sessions"],
             },
+        },
+    )
+
+
+def _hr_zones(avg_hr: float | None, max_hr: float | None, athlete_max: int = 190) -> dict:
+    """Return HR zone info for the activity."""
+    if not avg_hr:
+        return {}
+    pct_avg = avg_hr / athlete_max * 100
+    pct_max = (max_hr / athlete_max * 100) if max_hr else None
+    if pct_avg >= 90:
+        zone, zone_label, zone_color = 5, "VO2 Máx", "#c44030"
+    elif pct_avg >= 80:
+        zone, zone_label, zone_color = 4, "Umbral", "#d98840"
+    elif pct_avg >= 70:
+        zone, zone_label, zone_color = 3, "Aeróbico", "#3dcc7a"
+    elif pct_avg >= 60:
+        zone, zone_label, zone_color = 2, "Base aeróbica", "#4b9dd6"
+    else:
+        zone, zone_label, zone_color = 1, "Recuperación", "#918d87"
+    return {"zone": zone, "label": zone_label, "color": zone_color,
+            "pct_avg": round(pct_avg, 1), "pct_max": round(pct_max, 1) if pct_max else None}
+
+
+@router.get("/activities/{activity_id}", response_class=HTMLResponse)
+async def activity_detail(request: Request, activity_id: int):
+    db = await get_db()
+    try:
+        row = await (await db.execute(
+            "SELECT * FROM activities WHERE id = ?", (activity_id,)
+        )).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Actividad no encontrada")
+
+        athlete = await (await db.execute(
+            "SELECT max_hr, rest_hr FROM athlete_profile WHERE id = 1"
+        )).fetchone()
+
+        # Prev / next for navigation
+        prev_row = await (await db.execute(
+            "SELECT id FROM activities WHERE start_date < ? ORDER BY start_date DESC LIMIT 1",
+            (row["start_date"],)
+        )).fetchone()
+        next_row = await (await db.execute(
+            "SELECT id FROM activities WHERE start_date > ? ORDER BY start_date ASC LIMIT 1",
+            (row["start_date"],)
+        )).fetchone()
+
+    finally:
+        await db.close()
+
+    athlete_max = (athlete["max_hr"] if athlete and athlete["max_hr"] else 190)
+    act = dict(row)
+    act["time_fmt"]   = _format_time(act["moving_time_s"])
+    act["pace_fmt"]   = _format_pace(act["avg_pace_s_per_km"], act["sport_type"])
+    act["sport_label"] = SPORT_LABELS.get(act["sport_type"], act["sport_type"] or "—")
+    act["date_fmt"]   = (act["start_date"] or "")[:10]
+    act["km"]         = round(act["distance_m"] / 1000, 2) if act["distance_m"] else None
+    act["hr_zones"]   = _hr_zones(act["avg_heart_rate"], act["max_heart_rate"], athlete_max)
+    pause = (act["elapsed_time_s"] or 0) - (act["moving_time_s"] or 0)
+    act["pause_fmt"]  = _format_time(pause) if pause > 0 else "—"
+
+    return templates.TemplateResponse(
+        request=request,
+        name="activity_detail.html",
+        context={
+            "act": act,
+            "prev_id": prev_row["id"] if prev_row else None,
+            "next_id": next_row["id"] if next_row else None,
         },
     )
