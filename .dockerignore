@@ -1,0 +1,13 @@
+.env
+*.db
+*.db-journal
+.venv
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.git/
+.github/
+logos/
+.claude/
+bash.exe.stackdump
