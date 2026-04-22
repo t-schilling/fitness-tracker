@@ -31,15 +31,45 @@
   </div>
 </div>
 
+<!-- Date range filter -->
+<form method="get" action="/activities" class="flex flex-wrap items-end gap-3 mb-4">
+  {% if active_sport %}<input type="hidden" name="sport" value="{{ active_sport }}">{% endif %}
+  <div>
+    <label class="block text-xs font-600 mb-1" style="color: oklch(0.60 0.01 55);">DESDE</label>
+    <input type="date" name="date_from" value="{{ date_from }}"
+           class="rounded px-3 py-1.5 text-sm border"
+           style="background-color: oklch(0.21 0.008 55); border-color: oklch(0.28 0.008 55); color: oklch(0.93 0.01 55); color-scheme: dark;">
+  </div>
+  <div>
+    <label class="block text-xs font-600 mb-1" style="color: oklch(0.60 0.01 55);">HASTA</label>
+    <input type="date" name="date_to" value="{{ date_to }}"
+           class="rounded px-3 py-1.5 text-sm border"
+           style="background-color: oklch(0.21 0.008 55); border-color: oklch(0.28 0.008 55); color: oklch(0.93 0.01 55); color-scheme: dark;">
+  </div>
+  <button type="submit"
+          class="px-3 py-1.5 rounded text-xs font-600"
+          style="background-color: oklch(0.72 0.17 55); color: oklch(0.12 0.008 55);">
+    Filtrar
+  </button>
+  {% if date_from or date_to %}
+  <a href="/activities{% if active_sport %}?sport={{ active_sport }}{% endif %}"
+     class="px-3 py-1.5 rounded text-xs font-600"
+     style="background-color: oklch(0.21 0.008 55); color: oklch(0.60 0.01 55);">
+    Limpiar
+  </a>
+  {% endif %}
+</form>
+
 <!-- Sport filters -->
 <div class="flex flex-wrap gap-2 mb-6">
-  <a href="/activities"
+  {% set date_qs = ('&date_from=' + date_from if date_from else '') + ('&date_to=' + date_to if date_to else '') %}
+  <a href="/activities{{ ('?' + date_qs[1:]) if date_qs else '' }}"
      class="px-3 py-1.5 rounded text-xs font-600 tracking-wide transition-colors"
      style="background-color: {% if not active_sport %}oklch(0.72 0.17 55); color: oklch(0.12 0.008 55){% else %}oklch(0.21 0.008 55); color: oklch(0.60 0.01 55){% endif %};">
     Todos
   </a>
   {% for s in sports %}
-  <a href="/activities?sport={{ s }}"
+  <a href="/activities?sport={{ s }}{{ date_qs }}"
      class="px-3 py-1.5 rounded text-xs font-600 tracking-wide transition-colors"
      style="background-color: {% if active_sport == s %}oklch(0.72 0.17 55); color: oklch(0.12 0.008 55){% else %}oklch(0.21 0.008 55); color: oklch(0.60 0.01 55){% endif %};">
     {{ sport_labels.get(s, s) }}
@@ -105,15 +135,16 @@
     Página {{ page }} de {{ total_pages }}
   </span>
   <div class="flex gap-2">
+    {% set pqs = ('sport=' + active_sport + '&' if active_sport else '') + ('date_from=' + date_from + '&' if date_from else '') + ('date_to=' + date_to + '&' if date_to else '') %}
     {% if page > 1 %}
-    <a href="/activities?sport={{ active_sport }}&page={{ page - 1 }}"
+    <a href="/activities?{{ pqs }}page={{ page - 1 }}"
        class="px-3 py-1.5 rounded text-xs font-600"
        style="background-color: oklch(0.21 0.008 55); color: oklch(0.60 0.01 55);">
       ← Anterior
     </a>
     {% endif %}
     {% if page < total_pages %}
-    <a href="/activities?sport={{ active_sport }}&page={{ page + 1 }}"
+    <a href="/activities?{{ pqs }}page={{ page + 1 }}"
        class="px-3 py-1.5 rounded text-xs font-600"
        style="background-color: oklch(0.21 0.008 55); color: oklch(0.60 0.01 55);">
       Siguiente →
