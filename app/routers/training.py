@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
@@ -24,7 +24,7 @@ async def training_page(request: Request):
 
 
 @router.get("/data")
-async def training_data(days: int = 90):
+async def training_data(days: int = Query(90, ge=1, le=365)):
     """Return CTL/ATL/TSB series for the last N days as JSON for Chart.js."""
     db = await get_db()
     try:
