@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Actividades — Fitness Tracker{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-6 flex items-end justify-between">
+  <div>
+    <h1 class="font-display font-700 text-3xl tracking-wide" style="color: oklch(0.93 0.01 55);">
+      Actividades
+    </h1>
+    <p class="text-sm mt-1" style="color: oklch(0.60 0.01 55);">
+      {{ total }} entrenamientos registrados
+    </p>
+  </div>
+
+  <!-- Aggregate stats -->
+  <div class="hidden sm:flex gap-6 text-right">
+    <div>
+      <div class="font-display font-700 text-xl" style="color: oklch(0.93 0.01 55);">{{ agg.km }} km</div>
+      <div class="text-xs" style="color: oklch(0.60 0.01 55);">distancia total</div>
+    </div>
+    <div>
+      <div class="font-display font-700 text-xl" style="color: oklch(0.93 0.01 55);">{{ agg.time }}</div>
+      <div class="text-xs" style="color: oklch(0.60 0.01 55);">tiempo total</div>
+    </div>
+    <div>
+      <div class="font-display font-700 text-xl" style="color: oklch(0.93 0.01 55);">{{ agg.sessions }}</div>
+      <div class="text-xs" style="color: oklch(0.60 0.01 55);">sesiones</div>
+    </div>
+  </div>
+</div>
+
+<!-- Sport filters -->
+<div class="flex flex-wrap gap-2 mb-6">
+  <a href="/activities"
+     class="px-3 py-1.5 rounded text-xs font-600 tracking-wide transition-colors"
+     style="background-color: {% if not active_sport %}oklch(0.72 0.17 55); color: oklch(0.12 0.008 55){% else %}oklch(0.21 0.008 55); color: oklch(0.60 0.01 55){% endif %};">
+    Todos
+  </a>
+  {% for s in sports %}
+  <a href="/activities?sport={{ s }}"
+     class="px-3 py-1.5 rounded text-xs font-600 tracking-wide transition-colors"
+     style="background-color: {% if active_sport == s %}oklch(0.72 0.17 55); color: oklch(0.12 0.008 55){% else %}oklch(0.21 0.008 55); color: oklch(0.60 0.01 55){% endif %};">
+    {{ sport_labels.get(s, s) }}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Activities table -->
+{% if activities %}
+<div class="rounded-lg overflow-hidden" style="border: 1px solid oklch(0.28 0.008 55);">
+  <table class="w-full text-sm">
+    <thead>
+      <tr style="background-color: oklch(0.17 0.008 55);">
+        <th class="text-left px-4 py-3 font-600 text-xs tracking-widest" style="color: oklch(0.60 0.01 55);">ACTIVIDAD</th>
+        <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden sm:table-cell" style="color: oklch(0.60 0.01 55);">DISTANCIA</th>
+        <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden sm:table-cell" style="color: oklch(0.60 0.01 55);">TIEMPO</th>
+        <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden md:table-cell" style="color: oklch(0.60 0.01 55);">RITMO</th>
+        <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden md:table-cell" style="color: oklch(0.60 0.01 55);">D+</th>
+        <th class="text-right px-4 py-3 font-600 text-xs tracking-widest" style="color: oklch(0.60 0.01 55);">FC</th>
+        <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden lg:table-cell" style="color: oklch(0.60 0.01 55);">TRIMP</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for act in activities %}
+      <tr class="transition-colors"
+          style="border-top: 1px solid oklch(0.28 0.008 55);"
+          onmouseover="this.style.backgroundColor='oklch(0.21 0.008 55)'"
+          onmouseout="this.style.backgroundColor=''">
+        <td class="px-4 py-3">
+          <div class="font-500" style="color: oklch(0.93 0.01 55);">{{ act.name or "Actividad" }}</div>
+          <div class="text-xs" style="color: oklch(0.60 0.01 55);">
+            {{ act.sport_label }} · {{ act.date_fmt }}
+          </div>
+        </td>
+        <td class="px-4 py-3 text-right font-display font-600 hidden sm:table-cell" style="color: oklch(0.93 0.01 55);">
+          {% if act.km %}{{ act.km }} km{% else %}—{% endif %}
+        </td>
+        <td class="px-4 py-3 text-right hidden sm:table-cell" style="color: oklch(0.60 0.01 55);">
+          {{ act.time_fmt }}
+        </td>
+        <td class="px-4 py-3 text-right hidden md:table-cell" style="color: oklch(0.60 0.01 55);">
+          {{ act.pace_fmt }}
+        </td>
+        <td class="px-4 py-3 text-right hidden md:table-cell" style="color: oklch(0.60 0.01 55);">
+          {% if act.elevation_gain_m %}{{ act.elevation_gain_m | int }}m{% else %}—{% endif %}
+        </td>
+        <td class="px-4 py-3 text-right font-display font-600" style="color: oklch(0.65 0.15 35);">
+          {% if act.avg_heart_rate %}{{ act.avg_heart_rate | int }}{% else %}—{% endif %}
+        </td>
+        <td class="px-4 py-3 text-right hidden lg:table-cell" style="color: oklch(0.60 0.01 55);">
+          {% if act.trimp %}{{ act.trimp | round(1) }}{% else %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="flex items-center justify-between mt-4">
+  <span class="text-xs" style="color: oklch(0.60 0.01 55);">
+    Página {{ page }} de {{ total_pages }}
+  </span>
+  <div class="flex gap-2">
+    {% if page > 1 %}
+    <a href="/activities?sport={{ active_sport }}&page={{ page - 1 }}"
+       class="px-3 py-1.5 rounded text-xs font-600"
+       style="background-color: oklch(0.21 0.008 55); color: oklch(0.60 0.01 55);">
+      ← Anterior
+    </a>
+    {% endif %}
+    {% if page < total_pages %}
+    <a href="/activities?sport={{ active_sport }}&page={{ page + 1 }}"
+       class="px-3 py-1.5 rounded text-xs font-600"
+       style="background-color: oklch(0.21 0.008 55); color: oklch(0.60 0.01 55);">
+      Siguiente →
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="rounded-lg p-12 flex flex-col items-center text-center"
+     style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+  <p class="font-display font-600 text-lg" style="color: oklch(0.60 0.01 55);">
+    No hay actividades{% if active_sport %} de este tipo{% endif %}
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}
