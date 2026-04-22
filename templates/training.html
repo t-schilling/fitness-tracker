@@ -8,7 +8,7 @@
   <h1 class="font-display font-700 text-3xl tracking-wide" style="color: oklch(0.93 0.01 55);">
     Training Load
   </h1>
-  <p class="text-sm mt-1" style="color: oklch(0.60 0.01 55);">
+  <p id="training-subtitle" class="text-sm mt-1" style="color: oklch(0.60 0.01 55);">
     Fitness · Fatiga · Forma — últimos 90 días
   </p>
 </div>
@@ -102,6 +102,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <script>
   // Hex — Canvas 2D does not support oklch()
   const C = {
@@ -176,7 +177,31 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: tipOpts },
+        plugins: {
+          legend: { display: false },
+          tooltip: tipOpts,
+          annotation: {
+            annotations: {
+              zonePos: {
+                type: 'box', yMin: 5,
+                backgroundColor: 'rgba(61,204,122,0.08)',
+                borderWidth: 0,
+              },
+              zoneNeutral: {
+                type: 'box', yMin: -5, yMax: 5,
+                backgroundColor: 'rgba(212,149,48,0.08)',
+                borderWidth: 0,
+              },
+              zoneNeg: {
+                type: 'box', yMax: -5,
+                backgroundColor: 'rgba(196,64,48,0.08)',
+                borderWidth: 0,
+              },
+              linePos: { type: 'line', yMin: 5, yMax: 5, borderColor: 'rgba(61,204,122,0.4)', borderWidth: 1, borderDash: [4,4] },
+              lineNeg: { type: 'line', yMin: -5, yMax: -5, borderColor: 'rgba(196,64,48,0.4)', borderWidth: 1, borderDash: [4,4] },
+            },
+          },
+        },
         scales: {
           x: { grid: gridOpts, border: borderOpts, ticks: tickOpts },
           y: { grid: gridOpts, border: borderOpts, ticks: tickOpts },
@@ -217,6 +242,9 @@
       btn.style.backgroundColor = d === days ? C.btnOn  : C.btnOff;
       btn.style.color            = d === days ? C.btnOnTx : C.btnOffTx;
     });
+
+    document.getElementById('training-subtitle').textContent =
+      'Fitness · Fatiga · Forma — últimos ' + days + ' días';
 
     const resp = await fetch('/training/data?days=' + days);
     const data = await resp.json();

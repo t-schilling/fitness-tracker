@@ -64,6 +64,16 @@
     </div>
 
   </div>
+
+  <!-- CTL/ATL sparkline (30d) -->
+  {% if stats.ctl is not none %}
+  <div class="mt-4 rounded-lg px-5 pt-4 pb-3" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+    <div class="text-xs font-600 tracking-widest mb-3" style="color: oklch(0.60 0.01 55);">TENDENCIA 30 DÍAS</div>
+    <div style="height: 80px;">
+      <canvas id="sparkline-ctl"></canvas>
+    </div>
+  </div>
+  {% endif %}
 </section>
 
 <!-- Weekly Summary -->
@@ -173,4 +183,38 @@
 
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+{% if stats.ctl is not none %}
+<script>
+  (async () => {
+    const resp = await fetch('/training/data?days=30');
+    const data = await resp.json();
+    new Chart(document.getElementById('sparkline-ctl'), {
+      type: 'line',
+      data: {
+        labels: data.labels,
+        datasets: [
+          { label: 'CTL', data: data.ctl, borderColor: '#4b9dd6', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: 0.3 },
+          { label: 'ATL', data: data.atl, borderColor: '#d98840', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: 0.3 },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: '#918d87', boxWidth: 10, font: { size: 10 } } },
+          tooltip: { backgroundColor: '#2a2725', titleColor: '#edeae6', bodyColor: '#918d87' },
+        },
+        scales: {
+          x: { display: false },
+          y: { grid: { color: '#373330' }, border: { display: false }, ticks: { color: '#918d87', maxTicksLimit: 4, font: { size: 10 } } },
+        },
+      },
+    });
+  })();
+</script>
+{% endif %}
 {% endblock %}
