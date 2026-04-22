@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Fitness Tracker{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="/static/img/logo-icon-512.svg" />
 
   <!-- Fonts: Barlow Semi Condensed (headings/data) + Manrope (UI/body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -59,12 +60,9 @@
 
       <!-- Logo -->
       <div class="px-3 mb-6">
-        <span class="font-display font-700 text-xl tracking-wide" style="color: oklch(0.72 0.17 55);">
-          FT
-        </span>
-        <span class="font-display font-600 text-xl tracking-wide ml-1" style="color: oklch(0.93 0.01 55);">
-          Tracker
-        </span>
+        <a href="/">
+          <img src="/static/img/logo-navbar.svg" alt="Fitness Tracker" width="160" height="26" />
+        </a>
       </div>
 
       <!-- Nav links -->
@@ -127,7 +125,7 @@
       <!-- Top bar (mobile) -->
       <header class="md:hidden flex items-center justify-between px-4 py-3 border-b"
               style="background-color: oklch(0.17 0.008 55); border-color: oklch(0.28 0.008 55);">
-        <span class="font-display font-700 text-lg" style="color: oklch(0.72 0.17 55);">FT</span>
+        <img src="/static/img/logo-navbar.svg" alt="Fitness Tracker" height="22" />
         <nav class="flex gap-4">
           <a href="/" class="text-sm" style="color: oklch(0.60 0.01 55);">Dashboard</a>
           <a href="/activities" class="text-sm" style="color: oklch(0.60 0.01 55);">Actividades</a>

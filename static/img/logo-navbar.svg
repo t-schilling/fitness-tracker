@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="36" viewBox="0 0 220 36" role="img">
+  <title>Fitness Tracker — navbar logo</title>
+  <desc>Logo horizontal compacto para navbar: icono cuadrado redondeado con montaña y pulso, seguido del wordmark FITNESS TRACKER</desc>
+
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Icon container 36x36 -->
+  <rect x="0" y="0" width="36" height="36" rx="8" fill="#1f1a14"/>
+
+  <!-- Mountain outline -->
+  <polygon points="18,7 6,29 30,29" fill="none" stroke="#ede8df" stroke-width="1.6" stroke-linejoin="round"/>
+  <!-- Snow cap -->
+  <polygon points="18,7 13,17 23,17" fill="#ede8df" stroke="none"/>
+  <!-- Heartbeat line crossing mountain base -->
+  <polyline points="2,24 7,24 10,18 13,28 16,14 19,28 22,18 25,24 34,24" fill="none" stroke="#d97b1a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Wordmark -->
+  <text x="44" y="15" font-family="'Barlow Semi Condensed', sans-serif" font-weight="600" font-size="14" fill="#ede8df" letter-spacing="1.5">FITNESS</text>
+  <text x="44" y="30" font-family="'Barlow Semi Condensed', sans-serif" font-weight="700" font-size="14" fill="#d97b1a" letter-spacing="1.5">TRACKER</text>
+</svg>

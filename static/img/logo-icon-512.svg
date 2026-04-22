@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img">
+  <title>Fitness Tracker — app icon</title>
+  <desc>Icono de app cuadrado redondeado: montaña con pico nevado y línea de pulso cardíaco en naranja ámbar</desc>
+
+  <!-- App icon background -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="#1c1710"/>
+
+  <!-- Subtle inner glow ring -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="none" stroke="#2e2518" stroke-width="2"/>
+
+  <!-- Mountain -->
+  <polygon points="256,100 100,400 412,400" fill="none" stroke="#ede8df" stroke-width="14" stroke-linejoin="round"/>
+  <!-- Snow cap -->
+  <polygon points="256,100 196,230 316,230" fill="#ede8df" stroke="none"/>
+
+  <!-- Heartbeat line -->
+  <polyline points="32,340 96,340 138,270 182,390 222,180 262,390 304,270 352,340 480,340"
+    fill="none" stroke="#d97b1a" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
