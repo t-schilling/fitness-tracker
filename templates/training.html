@@ -60,7 +60,7 @@
 <div class="flex gap-2 mb-6">
   {% for d, label in [(30, "30d"), (60, "60d"), (90, "90d"), (180, "180d")] %}
   <button
-    onclick="loadChart({{ d }})"
+    onclick="loadChartData({{ d }})"
     id="btn-{{ d }}"
     class="px-3 py-1.5 rounded text-xs font-600 tracking-wide transition-colors"
     style="background-color: oklch(0.21 0.008 55); color: oklch(0.60 0.01 55);">
@@ -103,28 +103,34 @@
 
 {% block scripts %}
 <script>
-  // Hex equivalents — Canvas 2D doesn't support oklch()
+  // Hex — Canvas 2D does not support oklch()
   const C = {
-    ctl:     '#4b9dd6',  // oklch(0.65 0.15 240) — blue
-    atl:     '#d98840',  // oklch(0.65 0.15 35)  — orange
-    tsbPos:  '#3dcc7a',  // oklch(0.65 0.15 145) — green
-    tsbNeg:  '#c44030',  // oklch(0.55 0.18 25)  — red
-    accent:  '#d49530',  // oklch(0.72 0.17 55)  — amber
-    muted:   '#918d87',  // oklch(0.60 0.01 55)  — gray
-    grid:    '#373330',  // oklch(0.21 0.008 55)  — surface2
-    tooltip: '#2a2725',  // oklch(0.17 0.008 55)  — surface
-    text:    '#edeae6',  // oklch(0.93 0.01 55)  — text
+    ctl:     '#4b9dd6',
+    atl:     '#d98840',
+    tsbPos:  '#3dcc7a',
+    tsbNeg:  '#c44030',
+    accent:  '#d49530',
+    muted:   '#918d87',
+    grid:    '#373330',
+    tooltip: '#2a2725',
+    text:    '#edeae6',
+    btnOn:   '#d49530',
+    btnOnTx: '#1e1b18',
+    btnOff:  '#373330',
+    btnOffTx:'#918d87',
   };
 
   Chart.defaults.color = C.muted;
   Chart.defaults.font.family = 'Manrope';
   Chart.defaults.font.size = 11;
 
-  const gridOpts = { color: C.grid, drawBorder: false };
-  const tickOpts = { color: C.muted, maxTicksLimit: 8 };
+  // Chart.js v4 grid/border API
+  const gridOpts  = { color: C.grid };
+  const borderOpts = { display: false };
+  const tickOpts  = { color: C.muted, maxTicksLimit: 6 };
+  const tipOpts   = { backgroundColor: C.tooltip, titleColor: C.text, bodyColor: C.muted };
 
   let ctlChart, tsbChart, loadChart;
-  let activeDays = 90;
 
   function buildCtlChart(labels, ctl, atl) {
     if (ctlChart) ctlChart.destroy();
@@ -133,24 +139,8 @@
       data: {
         labels,
         datasets: [
-          {
-            label: 'CTL',
-            data: ctl,
-            borderColor: C.ctl,
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.3,
-          },
-          {
-            label: 'ATL',
-            data: atl,
-            borderColor: C.atl,
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.3,
-          },
+          { label: 'CTL', data: ctl, borderColor: C.ctl, backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+          { label: 'ATL', data: atl, borderColor: C.atl, backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 },
         ],
       },
       options: {
@@ -158,12 +148,12 @@
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { labels: { color: C.muted, boxWidth: 12, font: { size: 11 } } },
-          tooltip: { backgroundColor: C.tooltip, titleColor: C.text, bodyColor: C.muted },
+          legend: { labels: { color: C.muted, boxWidth: 12 } },
+          tooltip: tipOpts,
         },
         scales: {
-          x: { grid: gridOpts, ticks: { ...tickOpts, maxTicksLimit: 6 } },
-          y: { grid: gridOpts, ticks: tickOpts },
+          x: { grid: gridOpts, border: borderOpts, ticks: tickOpts },
+          y: { grid: gridOpts, border: borderOpts, ticks: tickOpts },
         },
       },
     });
@@ -171,7 +161,6 @@
 
   function buildTsbChart(labels, tsb) {
     if (tsbChart) tsbChart.destroy();
-    const colors = tsb.map(v => v >= 0 ? C.tsbPos : C.tsbNeg);
     tsbChart = new Chart(document.getElementById('chart-tsb'), {
       type: 'bar',
       data: {
@@ -179,7 +168,7 @@
         datasets: [{
           label: 'TSB',
           data: tsb,
-          backgroundColor: colors,
+          backgroundColor: tsb.map(v => v >= 0 ? C.tsbPos : C.tsbNeg),
           borderWidth: 0,
           borderRadius: 2,
         }],
@@ -187,20 +176,10 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { backgroundColor: C.tooltip, titleColor: C.text, bodyColor: C.muted },
-        },
+        plugins: { legend: { display: false }, tooltip: tipOpts },
         scales: {
-          x: { grid: gridOpts, ticks: { ...tickOpts, maxTicksLimit: 6 } },
-          y: {
-            grid: gridOpts,
-            ticks: tickOpts,
-            afterDataLimits: axis => {
-              const abs = Math.max(Math.abs(axis.min), Math.abs(axis.max));
-              axis.min = -abs; axis.max = abs;
-            },
-          },
+          x: { grid: gridOpts, border: borderOpts, ticks: tickOpts },
+          y: { grid: gridOpts, border: borderOpts, ticks: tickOpts },
         },
       },
     });
@@ -223,41 +202,29 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { backgroundColor: C.tooltip, titleColor: C.text, bodyColor: C.muted },
-        },
+        plugins: { legend: { display: false }, tooltip: tipOpts },
         scales: {
-          x: { grid: gridOpts, ticks: { ...tickOpts, maxTicksLimit: 6 } },
-          y: { grid: gridOpts, ticks: tickOpts, min: 0 },
+          x: { grid: gridOpts, border: borderOpts, ticks: tickOpts },
+          y: { grid: gridOpts, border: borderOpts, ticks: tickOpts, min: 0 },
         },
       },
     });
   }
 
-  async function loadChart(days) {
-    activeDays = days;
-
-    // Update button styles
+  async function loadChartData(days) {
     [30, 60, 90, 180].forEach(d => {
-      const btn = document.getElementById(`btn-${d}`);
-      if (d === days) {
-        btn.style.backgroundColor = 'oklch(0.72 0.17 55)';
-        btn.style.color = 'oklch(0.12 0.008 55)';
-      } else {
-        btn.style.backgroundColor = 'oklch(0.21 0.008 55)';
-        btn.style.color = 'oklch(0.60 0.01 55)';
-      }
+      const btn = document.getElementById('btn-' + d);
+      btn.style.backgroundColor = d === days ? C.btnOn  : C.btnOff;
+      btn.style.color            = d === days ? C.btnOnTx : C.btnOffTx;
     });
 
-    const resp = await fetch(`/training/data?days=${days}`);
+    const resp = await fetch('/training/data?days=' + days);
     const data = await resp.json();
     buildCtlChart(data.labels, data.ctl, data.atl);
     buildTsbChart(data.labels, data.tsb);
     buildLoadChart(data.labels, data.load);
   }
 
-  // Initial load
-  loadChart(90);
+  loadChartData(90);
 </script>
 {% endblock %}
