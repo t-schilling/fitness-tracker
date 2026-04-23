@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Rutas GPX — Fitness Tracker{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-6 flex items-end justify-between">
+  <div>
+    <h1 class="font-display font-700 text-3xl tracking-wide" style="color: oklch(0.93 0.01 55);">
+      Rutas GPX
+    </h1>
+    <p class="text-sm mt-1" style="color: oklch(0.60 0.01 55);">
+      {{ routes | length }} ruta{{ 's' if routes | length != 1 else '' }} cargada{{ 's' if routes | length != 1 else '' }}
+    </p>
+  </div>
+
+  <!-- Upload button -->
+  <label for="gpx-file-input"
+         class="cursor-pointer px-4 py-2 rounded-md text-sm font-600"
+         style="background-color: oklch(0.72 0.17 55); color: oklch(0.12 0.008 55);">
+    + Subir GPX
+  </label>
+</div>
+
+<!-- Upload form (hidden, triggered by label) -->
+<form id="gpx-form" method="post" action="/gpx/upload" enctype="multipart/form-data" class="hidden">
+  <input id="gpx-file-input" type="file" name="file" accept=".gpx" class="hidden">
+</form>
+
+<script>
+  document.getElementById('gpx-file-input').addEventListener('change', function() {
+    if (this.files.length) document.getElementById('gpx-form').submit();
+  });
+</script>
+
+{% if routes %}
+<!-- Routes table -->
+<div class="rounded-lg overflow-hidden" style="border: 1px solid oklch(0.28 0.008 55);">
+  <table class="w-full text-sm">
+    <thead>
+      <tr style="background-color: oklch(0.17 0.008 55);">
+        <th class="text-left px-4 py-3 font-600 text-xs tracking-widest" style="color: oklch(0.60 0.01 55);">RUTA</th>
+        <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden sm:table-cell" style="color: oklch(0.60 0.01 55);">DISTANCIA</th>
+        <th class="text-right px-4 py-3 font-600 text-xs tracking-widest hidden sm:table-cell" style="color: oklch(0.60 0.01 55);">D+</th>
+        <th class="text-right px-4 py-3 font-600 text-xs tracking-widest" style="color: oklch(0.60 0.01 55);">DIFICULTAD</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in routes %}
+      <tr class="transition-colors"
+          style="border-top: 1px solid oklch(0.28 0.008 55);"
+          onmouseover="this.style.backgroundColor='oklch(0.21 0.008 55)'"
+          onmouseout="this.style.backgroundColor=''">
+        <td class="px-4 py-3">
+          <a href="/gpx/{{ r.id }}" class="block hover:no-underline">
+            <div class="font-500" style="color: oklch(0.93 0.01 55);">{{ r.filename }}</div>
+            <div class="text-xs" style="color: oklch(0.60 0.01 55);">{{ r.date_fmt }}</div>
+          </a>
+        </td>
+        <td class="px-4 py-3 text-right font-display font-600 hidden sm:table-cell" style="color: oklch(0.93 0.01 55);">
+          {% if r.km %}{{ r.km }} km{% else %}—{% endif %}
+        </td>
+        <td class="px-4 py-3 text-right hidden sm:table-cell" style="color: oklch(0.60 0.01 55);">
+          {% if r.gain %}{{ r.gain }} m{% else %}—{% endif %}
+        </td>
+        <td class="px-4 py-3 text-right">
+          <span class="px-2 py-0.5 rounded text-xs font-600"
+                style="background-color: {{ r.difficulty_color }}22; color: {{ r.difficulty_color }};">
+            {{ r.difficulty_label }}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div class="rounded-lg p-12 flex flex-col items-center text-center"
+     style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+  <p class="font-display font-600 text-lg mb-2" style="color: oklch(0.60 0.01 55);">
+    No hay rutas cargadas
+  </p>
+  <p class="text-sm" style="color: oklch(0.45 0.01 55);">
+    Sube un archivo .gpx para ver el perfil de elevación
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

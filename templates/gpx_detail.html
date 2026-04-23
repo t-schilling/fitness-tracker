@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}{{ route.filename }} — Fitness Tracker{% endblock %}
+
+{% block content %}
+
+<!-- Navigation -->
+<div class="mb-6">
+  <a href="/gpx" class="text-sm font-500 flex items-center gap-1 w-fit"
+     style="color: oklch(0.60 0.01 55);"
+     onmouseover="this.style.color='oklch(0.93 0.01 55)'"
+     onmouseout="this.style.color='oklch(0.60 0.01 55)'">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Rutas GPX
+  </a>
+</div>
+
+<!-- Header -->
+<div class="mb-6">
+  <div class="text-xs font-600 tracking-widest mb-1" style="color: oklch(0.72 0.17 55);">
+    RUTA GPX · {{ route.date_fmt }}
+  </div>
+  <div class="flex items-center gap-3">
+    <h1 class="font-display font-700 text-3xl tracking-wide" style="color: oklch(0.93 0.01 55);">
+      {{ route.filename | replace('.gpx', '') | replace('_', ' ') | replace('-', ' ') }}
+    </h1>
+    <span class="px-2 py-0.5 rounded text-xs font-600"
+          style="background-color: {{ route.difficulty_color }}22; color: {{ route.difficulty_color }};">
+      {{ route.difficulty_label }}
+    </span>
+  </div>
+</div>
+
+<!-- Stats grid -->
+<section class="mb-6">
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    {% set stats = [
+      ("DISTANCIA",   (("%.2f" | format(route.km)) + " km") if route.km else "—"),
+      ("D+",          (route.gain | string + " m") if route.gain else "—"),
+      ("D-",          (route.loss | string + " m") if route.loss else "—"),
+      ("ALT. MÁX",    ((route.max_elevation_m | int | string) + " m") if route.max_elevation_m else "—"),
+    ] %}
+    {% for label, value in stats %}
+    <div class="rounded-lg p-4" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+      <div class="text-xs font-600 tracking-widest mb-2" style="color: oklch(0.60 0.01 55);">{{ label }}</div>
+      <div class="font-display font-700 text-2xl" style="color: oklch(0.93 0.01 55);">{{ value }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Map + Elevation profile -->
+<section class="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+  <!-- Map -->
+  <div class="rounded-lg overflow-hidden" style="border: 1px solid oklch(0.28 0.008 55);">
+    <div id="map" style="height: 360px; background-color: oklch(0.17 0.008 55);"></div>
+  </div>
+
+  <!-- Elevation profile -->
+  <div class="rounded-lg p-4" style="background-color: oklch(0.17 0.008 55); border: 1px solid oklch(0.28 0.008 55);">
+    <div class="text-xs font-600 tracking-widest mb-3" style="color: oklch(0.60 0.01 55);">PERFIL DE ELEVACIÓN</div>
+    {% if profile %}
+    <div style="height: 320px;">
+      <canvas id="elevation-chart"></canvas>
+    </div>
+    {% else %}
+    <div class="flex items-center justify-center h-full" style="height: 320px;">
+      <p class="text-sm" style="color: oklch(0.60 0.01 55);">Sin datos de elevación</p>
+    </div>
+    {% endif %}
+  </div>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  // Map
+  const coords = {{ coords_json | tojson }};
+  const map = L.map('map', { zoomControl: true });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CartoDB', maxZoom: 18,
+  }).addTo(map);
+
+  if (coords.length) {
+    const route = L.polyline(coords, { color: '#d49530', weight: 3, opacity: 0.9 }).addTo(map);
+    L.circleMarker(coords[0], { radius: 6, color: '#3dcc7a', fillColor: '#3dcc7a', fillOpacity: 1, weight: 2 })
+      .bindTooltip('Inicio').addTo(map);
+    L.circleMarker(coords[coords.length - 1], { radius: 6, color: '#c44030', fillColor: '#c44030', fillOpacity: 1, weight: 2 })
+      .bindTooltip('Fin').addTo(map);
+    map.fitBounds(route.getBounds(), { padding: [20, 20] });
+  } else {
+    map.setView([0, 0], 2);
+  }
+
+  // Elevation chart
+  {% if profile %}
+  const profile = {{ profile | tojson }};
+  const labels = profile.map(p => p[0].toFixed(1) + ' km');
+  const elevations = profile.map(p => p[1]);
+
+  new Chart(document.getElementById('elevation-chart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: elevations,
+        borderColor: '#d49530',
+        backgroundColor: 'rgba(212, 149, 48, 0.15)',
+        borderWidth: 2,
+        fill: true,
+        pointRadius: 0,
+        tension: 0.3,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          ticks: {
+            color: '#7a736b',
+            maxTicksLimit: 8,
+            maxRotation: 0,
+          },
+          grid: { color: '#2e2820' },
+          border: { display: false },
+        },
+        y: {
+          ticks: {
+            color: '#7a736b',
+            callback: v => v + ' m',
+          },
+          grid: { color: '#2e2820' },
+          border: { display: false },
+        },
+      },
+    },
+  });
+  {% endif %}
+</script>
+{% endblock %}
