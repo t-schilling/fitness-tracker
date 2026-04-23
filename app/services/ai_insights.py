@@ -20,7 +20,7 @@ _SYSTEM = (
     "El atleta corre habitualmente en los Andes de Chile."
 )
 
-_MODEL = "gemini-1.5-flash"
+_MODEL = "gemini-2.0-flash-lite"
 
 
 def _summarize_profile(profile: list[list]) -> str:
