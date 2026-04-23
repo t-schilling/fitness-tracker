@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.database import init_db
-from app.routers import activities, dashboard, sync, training
+from app.routers import activities, dashboard, gpx, sync, training
 
 
 @asynccontextmanager
@@ -21,4 +21,5 @@ app.include_router(dashboard.router)
 app.include_router(activities.router)
 app.include_router(sync.router)
 app.include_router(training.router)
+app.include_router(gpx.router)
 
