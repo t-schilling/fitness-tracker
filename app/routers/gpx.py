@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.database import get_db
+from app.services.ai_insights import analyze_gpx_route
 from app.services.gpx_processor import process_gpx
 
 router = APIRouter()
@@ -95,7 +96,7 @@ async def gpx_detail(request: Request, gpx_id: int):
         row = await (await db.execute("""
             SELECT id, filename, uploaded_at, total_distance_m, elevation_gain_m,
                    elevation_loss_m, max_elevation_m, min_elevation_m,
-                   estimated_difficulty, elevation_profile, key_segments
+                   estimated_difficulty, elevation_profile, key_segments, ai_analysis
             FROM gpx_analyses WHERE id = ?
         """, (gpx_id,))).fetchone()
         if not row:
@@ -113,3 +114,38 @@ async def gpx_detail(request: Request, gpx_id: int):
         "profile": profile,
         "coords_list": coords_list,
     })
+
+
+@router.post("/gpx/{gpx_id}/analyze", response_class=HTMLResponse)
+async def gpx_analyze(request: Request, gpx_id: int):
+    db = await get_db()
+    try:
+        row = await (await db.execute("""
+            SELECT id, filename, total_distance_m, elevation_gain_m, elevation_loss_m,
+                   max_elevation_m, min_elevation_m, estimated_difficulty, elevation_profile
+            FROM gpx_analyses WHERE id = ?
+        """, (gpx_id,))).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Ruta no encontrada")
+
+        profile = json.loads(row["elevation_profile"] or "[]")
+        analysis = await analyze_gpx_route(
+            filename=row["filename"],
+            dist_km=(row["total_distance_m"] or 0) / 1000,
+            gain_m=row["elevation_gain_m"] or 0,
+            loss_m=row["elevation_loss_m"] or 0,
+            max_ele=row["max_elevation_m"],
+            min_ele=row["min_elevation_m"],
+            difficulty=row["estimated_difficulty"] or "unknown",
+            profile=profile,
+        )
+
+        await db.execute(
+            "UPDATE gpx_analyses SET ai_analysis = ? WHERE id = ?",
+            (analysis, gpx_id),
+        )
+        await db.commit()
+    finally:
+        await db.close()
+
+    return RedirectResponse(url=f"/gpx/{gpx_id}", status_code=303)
