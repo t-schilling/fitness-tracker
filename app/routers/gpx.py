@@ -106,10 +106,10 @@ async def gpx_detail(request: Request, gpx_id: int):
     route = _enrich(dict(row))
     route["loss"] = round(route["elevation_loss_m"]) if route["elevation_loss_m"] else None
     profile = json.loads(route["elevation_profile"] or "[]")
-    coords_json = route["key_segments"] or "[]"
+    coords_list = json.loads(route["key_segments"] or "[]")
 
     return templates.TemplateResponse(request=request, name="gpx_detail.html", context={
         "route": route,
         "profile": profile,
-        "coords_json": coords_json,
+        "coords_list": coords_list,
     })
