@@ -60,9 +60,9 @@ def process_gpx(gpx_content: str) -> dict[str, Any]:
             prev_ele = points[i - 1][2]
             if ele is not None and prev_ele is not None:
                 diff = ele - prev_ele
-                if diff > 0:
+                if diff > 5:
                     gain_m += diff
-                else:
+                elif diff < -5:
                     loss_m += abs(diff)
         if ele is not None:
             cumulative.append((round(total_dist_m / 1000, 3), round(ele, 1)))
