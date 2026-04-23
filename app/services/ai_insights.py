@@ -10,6 +10,8 @@ _client: anthropic.AsyncAnthropic | None = None
 def _get_client() -> anthropic.AsyncAnthropic:
     global _client
     if _client is None:
+        if not settings.ANTHROPIC_API_KEY:
+            raise ValueError("ANTHROPIC_API_KEY no está configurado")
         _client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
     return _client
 
