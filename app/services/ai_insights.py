@@ -1,23 +1,29 @@
-import json
-
-import anthropic
+from google import genai
 
 from app.config import settings
 
-_client: anthropic.AsyncAnthropic | None = None
+_client: genai.Client | None = None
 
 
-def _get_client() -> anthropic.AsyncAnthropic:
+def _get_client() -> genai.Client:
     global _client
     if _client is None:
-        if not settings.ANTHROPIC_API_KEY:
-            raise ValueError("ANTHROPIC_API_KEY no está configurado")
-        _client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+        if not settings.GEMINI_API_KEY:
+            raise ValueError("GEMINI_API_KEY no está configurado")
+        _client = genai.Client(api_key=settings.GEMINI_API_KEY)
     return _client
 
 
+_SYSTEM = (
+    "Eres un entrenador experto en trail running con amplia experiencia en montaña andina. "
+    "Das análisis concretos y accionables. Usas unidades métricas. "
+    "El atleta corre habitualmente en los Andes de Chile."
+)
+
+_MODEL = "gemini-2.0-flash"
+
+
 def _summarize_profile(profile: list[list]) -> str:
-    """Reduce elevation profile to ~10 key waypoints for the prompt."""
     if not profile:
         return "Sin datos de elevación."
     n = len(profile)
@@ -38,9 +44,10 @@ async def analyze_gpx_route(
     difficulty: str,
     profile: list[list],
 ) -> str:
-    profile_summary = _summarize_profile(profile)
+    client = _get_client()
+    prompt = f"""{_SYSTEM}
 
-    prompt = f"""Analiza esta ruta de trail running y entrega un análisis práctico y específico.
+Analiza esta ruta de trail running y entrega un análisis práctico y específico.
 
 DATOS DE LA RUTA:
 - Archivo: {filename}
@@ -50,7 +57,7 @@ DATOS DE LA RUTA:
 - Altitud máxima: {f"{max_ele:.0f} m" if max_ele else "N/D"}
 - Altitud mínima: {f"{min_ele:.0f} m" if min_ele else "N/D"}
 - Dificultad estimada: {difficulty}
-- Perfil de elevación (dist/altitud): {profile_summary}
+- Perfil de elevación (dist/altitud): {_summarize_profile(profile)}
 
 Entrega el análisis en estas secciones exactas con formato markdown:
 
@@ -71,15 +78,8 @@ Rango de tiempo estimado para un corredor de trail competente (no elite). Usa la
 
 Sé específico y usa los datos reales. No des consejos genéricos."""
 
-    client = _get_client()
-    message = await client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
-        system=(
-            "Eres un entrenador experto en trail running con amplia experiencia en montaña andina. "
-            "Das análisis concretos y accionables. Usas unidades métricas. "
-            "El atleta corre habitualmente en los Andes de Chile."
-        ),
-        messages=[{"role": "user", "content": prompt}],
+    response = await client.aio.models.generate_content(
+        model=_MODEL,
+        contents=prompt,
     )
-    return message.content[0].text
+    return response.text
