@@ -129,16 +129,19 @@ async def gpx_analyze(request: Request, gpx_id: int):
             raise HTTPException(status_code=404, detail="Ruta no encontrada")
 
         profile = json.loads(row["elevation_profile"] or "[]")
-        analysis = await analyze_gpx_route(
-            filename=row["filename"],
-            dist_km=(row["total_distance_m"] or 0) / 1000,
-            gain_m=row["elevation_gain_m"] or 0,
-            loss_m=row["elevation_loss_m"] or 0,
-            max_ele=row["max_elevation_m"],
-            min_ele=row["min_elevation_m"],
-            difficulty=row["estimated_difficulty"] or "unknown",
-            profile=profile,
-        )
+        try:
+            analysis = await analyze_gpx_route(
+                filename=row["filename"],
+                dist_km=(row["total_distance_m"] or 0) / 1000,
+                gain_m=row["elevation_gain_m"] or 0,
+                loss_m=row["elevation_loss_m"] or 0,
+                max_ele=row["max_elevation_m"],
+                min_ele=row["min_elevation_m"],
+                difficulty=row["estimated_difficulty"] or "unknown",
+                profile=profile,
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Error Claude API: {exc}")
 
         await db.execute(
             "UPDATE gpx_analyses SET ai_analysis = ? WHERE id = ?",
