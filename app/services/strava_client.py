@@ -76,7 +76,8 @@ class StravaClient:
                 "refresh_token": self._refresh_token,
                 "grant_type": "refresh_token",
             })
-            resp.raise_for_status()
+            if not resp.is_success:
+                raise Exception(f"Strava token refresh {resp.status_code}: {resp.text}")
             data = resp.json()
         await self._save_tokens(data["access_token"], data["refresh_token"], data["expires_at"])
 
