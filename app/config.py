@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     JEFIT_USER_ID: str = ""
 
-    ANTHROPIC_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
 
     DATABASE_PATH: str = "./fitness.db"
     SECRET_KEY: str = "change-me"
