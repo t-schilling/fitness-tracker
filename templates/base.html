@@ -153,7 +153,8 @@
           const msg = data.synced > 0 ? `${data.synced} actividades nuevas` : 'Todo al día';
           showToast(msg, 'success');
         } else {
-          showToast('Error en sync', 'error');
+          const data = JSON.parse(evt.detail.xhr.responseText || '{}');
+          showToast('Error: ' + (data.error || evt.detail.xhr.status), 'error');
         }
       }
     });
